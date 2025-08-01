@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">小说阅读</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#3b82f6',
+                        dark: '#1F2937',
+                        light: '#F9FAFB',
+                        muted: '#6B7280',
+                        quote: '#60A5FA'
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .reading-progress {
+                height: 3px;
+                background: linear-gradient(to right, #3B82F6 var(--scroll), transparent 0);
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                z-index: 100;
+            }
+            .novel-container {
+                max-width: 768px;
+                margin: 0 auto;
+                padding: 2rem 1.5rem;
+            }
+            .text-block {
+                margin-bottom: 1.5rem;
+                line-height: 1.8;
+                text-indent: 2em;
+            }
+            .title-block {
+                margin: 2rem 0 1rem;
+                font-size: 1.5em;
+                font-weight: bold;
+                text-align: center;
+                text-indent: 0;
+            }
+            .image-block {
+                margin: 2rem 0;
+                text-align: center;
+            }
+            .image-block img {
+                max-width: 100%;
+                height: auto;
+                border-radius: 0.5rem;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            }
+            .quote-block {
+                margin: 1.5rem 0;
+                padding: 1rem 1.5rem;
+                border-left: 4px solid #60A5FA;
+                background-color: rgba(96, 165, 250, 0.05);
+                border-radius: 0 0.5rem 0.5rem 0;
+                font-style: italic;
+                line-height: 1.8;
+            }
+            .novel-header {
+                display: flex;
+                gap: 1.5rem;
+                margin-bottom: 2rem;
+                padding-bottom: 1.5rem;
+                border-bottom: 1px solid #e5e7eb;
+            }
+            .novel-cover-container {
+                width: 33%;
+                flex-shrink: 0;
+            }
+            .novel-cover-container img {
+                width: 100%;
+                height: auto;
+                border-radius: 0.5rem;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            }
+            .novel-info {
+                flex-grow: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+            .novel-name {
+                font-size: clamp(1.5rem, 3vw, 2.5rem);
+                font-weight: bold;
+                margin-bottom: 0.5rem;
+            }
+            .session-name {
+                font-size: clamp(1.2rem, 2vw, 1.8rem);
+                color: #6B7280;
+                font-style: italic;
+            }
+            .dark-mode {
+                background-color: #1c1c1e;
+                color: #e5e7eb;
+            }
+            .dark-mode .novel-header {
+                border-bottom-color: #4b5563;
+            }
+            .dark-mode .text-block {
+                color: #d1d5db;
+            }
+            .dark-mode .title-block {
+                color: #f3f4f6;
+            }
+            .dark-mode .novel-name {
+                color: #f9fafb;
+            }
+            .dark-mode .session-name {
+                color: #9ca3af;
+            }
+            .dark-mode .image-block img {
+                opacity: 0.9;
+            }
+            .dark-mode .novel-cover-container img {
+                opacity: 0.9;
+            }
+            .dark-mode .control-btn {
+                background-color: #1f2937;
+                color: #e5e7eb;
+            }
+            .dark-mode .control-btn:hover {
+                background-color: #374151;
+            }
+            .dark-mode .content-divider {
+                border-color: #4b5563;
+            }
+            .dark-mode .progress-display {
+                background-color: #1f2937;
+                color: #e5e7eb;
+            }
+            .reading-controls {
+                position: fixed;
+                bottom: 2rem;
+                right: 2rem;
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+                z-index: 50;
+            }
+            .control-btn {
+                width: 3rem;
+                height: 3rem;
+                border-radius: 50%;
+                background-color: rgba(255, 255, 255, 0.8);
+                color: #374151;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                transition: all 0.2s ease;
+                backdrop-filter: blur(4px);
+            }
+            .control-btn:hover {
+                background-color: white;
+                transform: scale(1.05);
+            }
+            .control-btn:active {
+                transform: scale(0.95);
+            }
+            .font-controls {
+                background-color: rgba(255, 255, 255, 0.8);
+                backdrop-filter: blur(4px);
+                padding: 0.75rem 1rem;
+                border-radius: 0.5rem;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+            }
+
+            .dark-mode .font-controls {
+                background-color: #1f2937;
+                color: #e5e7eb;
+            }
+            .font-btn {
+                width: 2rem;
+                height: 2rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 0.25rem;
+                transition: all 0.2s ease;
+            }
+            .font-btn:hover {
+                background-color: rgba(229, 231, 235, 0.8);
+            }
+            .font-size-display {
+                font-weight: 500;
+                min-width: 1.5rem;
+                text-align: center;
+            }
+            .content-divider {
+                margin: 2rem 0;
+                border: none;
+                border-top: 1px solid #e5e7eb;
+            }
+            .progress-display {
+                background-color: rgba(255, 255, 255, 0.8);
+                backdrop-filter: blur(4px);
+                padding: 0.5rem 0.75rem;
+                border-radius: 0.5rem;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                font-weight: 500;
+                display: flex;
+                align-items: center;
+                gap: 0.25rem;
+            }
+            .btn-secondary {
+                @apply bg-secondary hover:bg-secondary/90 text-white font-medium py-2 px-4 rounded-md transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5;
+            }
+            .btn-primary {
+                @apply bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-md transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light text-dark transition-colors duration-300">
+<!-- 阅读进度指示器 -->
+<div class="reading-progress" id="reading-progress"></div>
+
+<!-- 内容容器 -->
+<div class="novel-container">
+    <!-- 小说标题区域 -->
+    <div class="novel-header">
+        <div class="novel-cover-container" id="novel-cover-container">
+            <img src="" alt="小说封面" id="novel-cover">
+        </div>
+        <div class="novel-info">
+            <h1 class="novel-name" id="novel-name">小说名称</h1>
+            <h2 class="session-name" id="session-name">章节名称</h2>
+            <h3>上次观看进度：{{ reading_state }}</h3>
+
+            <div class="mt-8 flex justify-center space-x-3">
+                <a href="/" class="btn-secondary">首页</a>
+                <a href="/novel/{{ novel_name }}" class="btn-secondary">小说详情</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 小说内容区域 -->
+    <div class="prose max-w-none" id="novel-content">
+        <!-- 内容将通过JavaScript动态加载 -->
+    </div>
+
+    <div class="mt-8 flex justify-center space-x-3">
+        {% if next_chapter %}
+        <a href="/novel/{{ novel_name }}/{{ next_chapter.id }}" class="btn-primary">
+            下一章<br>{{ next_chapter.name }}<i class="fa fa-arrow-right ml-2"></i>
+        </a>
+        {% else %}
+        <button class="btn-primary opacity-50 cursor-not-allowed">
+            下一章<i class="fa fa-arrow-right ml-2"></i>
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 阅读控制按钮 -->
+<div class="reading-controls">
+    <button class="control-btn" id="scroll-to-top" title="返回顶部">
+        <i class="fa fa-arrow-up"></i>
+    </button>
+    <button class="control-btn" id="dark-mode-toggle" title="切换夜间模式">
+        <i class="fa fa-moon-o"></i>
+    </button>
+    <button class="control-btn" id="back-to-detail" title="返回详情页">
+        <i class="fa fa-book"></i>
+    </button>
+</div>
+
+<!-- 字体大小控制和阅读进度显示 -->
+<div class="fixed bottom-6 left-6 z-50 flex items-center gap-2">
+    <div class="flex items-center gap-2">
+        <div class="font-controls">
+            <button class="font-btn" id="decrease-font" title="减小字体">
+                <i class="fa fa-font fa-sm"></i>
+            </button>
+            <span class="font-size-display" id="font-size-display">16</span>
+            <button class="font-btn" id="increase-font" title="增大字体">
+                <i class="fa fa-font fa-lg"></i>
+            </button>
+        </div>
+
+        <div class="progress-display" id="progress-display">
+            <i class="fa fa-bookmark-o mr-1"></i>
+            <span id="progress-value">0.0%</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 当前字体大小，默认为16px
+    let currentFontSize = 16;
+    // 暗黑模式状态
+    let isDarkMode = false;
+    // 阅读进度计时器
+    let progressTimer = null;
+    // 小说名称和章节名称
+    let novelName = '{{ novel_name }}';
+    let chapterName = '{{ chapter_name }}';
+    // 页面加载状态
+    let isPageLoaded = false;
+    // 上次上报的进度
+    let lastReportedProgress = -1;
+    // 防抖计时器
+    let debounceTimer = null;
+
+    // DOM元素
+    const novelNameElement = document.getElementById('novel-name');
+    const sessionNameElement = document.getElementById('session-name');
+    const novelCoverElement = document.getElementById('novel-cover');
+    const novelCoverContainer = document.getElementById('novel-cover-container');
+    const novelContentElement = document.getElementById('novel-content');
+    const readingProgress = document.getElementById('reading-progress');
+    const darkModeToggle = document.getElementById('dark-mode-toggle');
+    const scrollToTopButton = document.getElementById('scroll-to-top');
+    const decreaseFontButton = document.getElementById('decrease-font');
+    const increaseFontButton = document.getElementById('increase-font');
+    const fontSizeDisplay = document.getElementById('font-size-display');
+    const pageTitle = document.getElementById('page-title');
+    const progressDisplay = document.getElementById('progress-display');
+    const progressValue = document.getElementById('progress-value');
+
+    // 页面加载时获取小说内容
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchNovelContent();
+        setupEventListeners();
+        updateReadingProgress();
+
+        // 监听页面完全加载事件
+        window.addEventListener('load', () => {
+            isPageLoaded = true;
+            // 页面加载完成后，恢复阅读进度
+            recoverReadingProgress();
+            // 延迟启动进度上报，确保内容完全渲染
+            setTimeout(() => {
+                startProgressTimer();
+                // 初始更新一次进度显示
+                updateProgressDisplay();
+            }, 1000);
+        });
+    });
+
+    // 获取小说内容
+    async function fetchNovelContent() {
+        try {
+            // 构建API URL
+            let apiUrl = '/api/{{ novel_name }}/{{ chapter_name }}';
+            const response = await fetch(apiUrl);
+
+            if (!response.ok) {
+                throw new Error(`HTTP错误，状态码: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.code !== 0) {
+                throw new Error(data.message || '获取小说内容失败');
+            }
+
+            renderNovelContent(data.data);
+
+            // 页面加载完成后，恢复阅读进度
+            recoverReadingProgress();
+        } catch (error) {
+            console.error('获取小说内容时出错:', error);
+            // 显示默认错误内容
+            renderErrorContent(error.message);
+            // 弹出错误提示
+            showErrorToast(`获取小说内容失败: ${error.message}`);
+        }
+    }
+
+    // 渲染小说内容
+    function renderNovelContent(novelData) {
+        // 更新页面标题
+        pageTitle.textContent = `${novelData.name} - ${novelData.session_name}`;
+
+        // 更新小说名称和章节名称
+        novelNameElement.textContent = novelData.name;
+        sessionNameElement.textContent = novelData.session_name;
+
+        // 更新封面图
+        if (novelData.cover) {
+            novelCoverElement.src = novelData.cover;
+            novelCoverElement.alt = `${novelData.name}封面`;
+            novelCoverContainer.classList.remove('hidden');
+        } else {
+            novelCoverContainer.classList.add('hidden');
+        }
+
+        // 清空内容区域并添加新内容
+        novelContentElement.innerHTML = '';
+
+        // 渲染内容
+        if (novelData.content && novelData.content.length > 0) {
+            novelData.content.forEach(item => {
+                if (item.type === 'text') {
+                    const paragraph = document.createElement('p');
+                    paragraph.classList.add('text-block');
+                    paragraph.textContent = item.data;
+                    novelContentElement.appendChild(paragraph);
+                } else if (item.type === 'image') {
+                    const imageContainer = document.createElement('div');
+                    imageContainer.classList.add('image-block');
+
+                    const image = document.createElement('img');
+                    image.src = item.data;
+                    image.alt = `${novelData.name}插图`;
+
+                    imageContainer.appendChild(image);
+                    novelContentElement.appendChild(imageContainer);
+                } else if (item.type === 'title') {
+                    const title = document.createElement('h3');
+                    title.classList.add('title-block');
+                    title.textContent = item.data;
+                    novelContentElement.appendChild(title);
+                } else if (item.type === 'hr') {
+                    const divider = document.createElement('hr');
+                    divider.classList.add('content-divider');
+                    novelContentElement.appendChild(divider);
+                } else if (item.type === 'quote') {
+                    const quote = document.createElement('blockquote');
+                    quote.classList.add('quote-block');
+                    quote.textContent = item.data;
+                    novelContentElement.appendChild(quote);
+                }
+            });
+        } else {
+            const emptyContent = document.createElement('p');
+            emptyContent.classList.add('text-block', 'text-center', 'text-muted');
+            emptyContent.textContent = '本章暂无内容';
+            novelContentElement.appendChild(emptyContent);
+        }
+    }
+
+    // 渲染错误内容
+    function renderErrorContent(errorMessage) {
+        const errorParagraph = document.createElement('p');
+        errorParagraph.classList.add('text-block', 'text-center', 'text-red-500');
+        errorParagraph.textContent = `加载失败: ${errorMessage}`;
+        novelContentElement.appendChild(errorParagraph);
+    }
+
+    // 设置事件监听器
+    function setupEventListeners() {
+        // 滚动事件 - 更新阅读进度条并触发上报和显示
+        window.addEventListener('scroll', () => {
+            updateReadingProgress();
+            updateProgressDisplay();
+            // 只有页面加载完成后才上报进度
+            if (isPageLoaded) {
+                debounceReportProgress();
+            }
+        });
+
+        // 暗黑模式切换
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+
+        // 返回顶部按钮
+        scrollToTopButton.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // 字体大小控制
+        decreaseFontButton.addEventListener('click', () => {
+            if (currentFontSize > 12) {
+                currentFontSize -= 1;
+                updateFontSize();
+            }
+        });
+
+        increaseFontButton.addEventListener('click', () => {
+            if (currentFontSize < 24) {
+                currentFontSize += 1;
+                updateFontSize();
+            }
+        });
+
+        // 初始隐藏返回顶部按钮
+        scrollToTopButton.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    // 更新阅读进度
+    function updateReadingProgress() {
+        const totalHeight = document.body.scrollHeight - window.innerHeight;
+        const progress = (window.scrollY / totalHeight) * 100;
+        readingProgress.style.setProperty('--scroll', `${progress}%`);
+
+        // 控制返回顶部按钮的显示/隐藏
+        if (window.scrollY > 300) {
+            scrollToTopButton.classList.remove('opacity-0', 'pointer-events-none');
+            scrollToTopButton.classList.add('opacity-100');
+        } else {
+            scrollToTopButton.classList.add('opacity-0', 'pointer-events-none');
+            scrollToTopButton.classList.remove('opacity-100');
+        }
+    }
+
+    // 更新阅读进度显示（保留一位小数）
+    function updateProgressDisplay() {
+        const totalHeight = document.body.scrollHeight - window.innerHeight;
+        const progress = (window.scrollY / totalHeight) * 100;
+        progressValue.textContent = `${progress.toFixed(1)}%`;
+
+        // 页面加载完成前不显示进度条
+        if (!isPageLoaded) {
+            progressDisplay.classList.add('opacity-0');
+        } else {
+            progressDisplay.classList.remove('opacity-0');
+        }
+    }
+
+    // 切换暗黑模式
+    function toggleDarkMode() {
+        isDarkMode = !isDarkMode;
+        document.body.classList.toggle('dark-mode', isDarkMode);
+        darkModeToggle.innerHTML = isDarkMode ?
+            '<i class="fa fa-sun-o"></i>' :
+            '<i class="fa fa-moon-o"></i>';
+    }
+
+    // 更新字体大小
+    function updateFontSize() {
+        document.body.style.fontSize = `${currentFontSize}px`;
+        fontSizeDisplay.textContent = currentFontSize;
+    }
+
+    // 开始定时发送阅读进度
+    function startProgressTimer() {
+        // 先发送一次当前进度
+        sendReadingProgress();
+
+        // 设置每分钟发送一次阅读进度
+        progressTimer = setInterval(() => {
+            sendReadingProgress();
+        }, 15 * 1000); // 每15秒
+    }
+
+    // 防抖上报阅读进度
+    function debounceReportProgress() {
+        // 清除之前的计时器
+        if (debounceTimer) {
+            clearTimeout(debounceTimer);
+        }
+
+        // 设置新的计时器，延迟300ms上报
+        debounceTimer = setTimeout(() => {
+            sendReadingProgress();
+        }, 300);
+    }
+
+    // 发送阅读进度到后端
+    async function sendReadingProgress() {
+        if (!novelName || !chapterName) {
+            console.log('缺少小说名称或章节名称，无法发送阅读进度');
+            return;
+        }
+
+        try {
+            const totalHeight = document.body.scrollHeight - window.innerHeight;
+            const progress = (window.scrollY / totalHeight) * 100;
+
+            // 如果进度变化小于0.2%，则不发送，避免频繁请求
+            if (Math.abs(progress - lastReportedProgress) < 0.2) {
+                return;
+            }
+
+            lastReportedProgress = progress;
+
+            // 构建API URL
+            const apiUrl = `/api/state?novel_name=${encodeURIComponent(novelName)}&chapter_name=${encodeURIComponent(chapterName)}&state=${progress.toFixed(2)}`;
+
+            // 发送异步请求
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`发送阅读进度失败: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.code !== 0) {
+                throw new Error(data.message || '发送阅读进度失败');
+            }
+
+            console.log(`阅读进度已发送: ${progress.toFixed(2)}%`);
+        } catch (error) {
+            console.error('发送阅读进度时出错:', error);
+            showErrorToast(`保存阅读进度失败: ${error.message}`);
+        }
+    }
+
+    // 恢复阅读进度
+    async function recoverReadingProgress() {
+        if (!novelName || !chapterName) {
+            console.log('缺少小说名称或章节名称，无法恢复阅读进度');
+            return;
+        }
+
+        try {
+            // 构建API URL
+            const apiUrl = `/api/state?novel_name=${encodeURIComponent(novelName)}&chapter_name=${encodeURIComponent(chapterName)}`;
+
+            // 发送异步请求获取阅读进度
+            const response = await fetch(apiUrl);
+
+            if (!response.ok) {
+                throw new Error(`获取阅读进度失败: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.code !== 0) {
+                throw new Error(data.message || '获取阅读进度失败');
+            }
+
+            const progress = parseFloat(data.data?.state || 0);
+
+            if (progress > 0 && progress <= 100) {
+                // 计算滚动位置
+                const totalHeight = document.body.scrollHeight - window.innerHeight;
+                const scrollPosition = (progress / 100) * totalHeight;
+
+                // 平滑滚动到指定位置
+                window.scrollTo({
+                    top: scrollPosition,
+                    behavior: 'smooth'
+                });
+
+                console.log(`已恢复到阅读进度: ${progress.toFixed(2)}%`);
+
+                // 更新最后上报的进度和显示
+                lastReportedProgress = progress;
+                updateProgressDisplay();
+            }
+        } catch (error) {
+            console.error('获取阅读进度时出错:', error);
+            showErrorToast(`恢复阅读进度失败: ${error.message}`);
+        }
+    }
+
+    // 页面卸载时清除计时器
+    window.addEventListener('beforeunload', () => {
+        if (progressTimer) {
+            clearInterval(progressTimer);
+        }
+        if (debounceTimer) {
+            clearTimeout(debounceTimer);
+        }
+    });
+
+    // 显示错误提示
+    function showErrorToast(message) {
+        // 创建提示元素
+        const toast = document.createElement('div');
+        toast.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg z-50 transform transition-all duration-300 opacity-0 translate-y-[-20px]';
+        toast.textContent = message;
+
+        // 添加到页面
+        document.body.appendChild(toast);
+
+        // 显示提示
+        setTimeout(() => {
+            toast.classList.remove('opacity-0', 'translate-y-[-20px]');
+        }, 10);
+
+        // 3秒后隐藏
+        setTimeout(() => {
+            toast.classList.add('opacity-0', 'translate-y-[-20px]');
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 300);
+        }, 3000);
+    }
+</script>
+</body>
+</html>    

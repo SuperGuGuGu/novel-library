@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+        <h2 class="text-2xl md:text-3xl font-bold text-dark mb-2">首页</h2>
+        <p class="text-gray-600">共 {{ novel_list|length }} 部漫画</p>
+    </div>
+    <a href="/refresh" class="btn-secondary self-start sm:self-center">刷新列表</a>
+</div>
+
+{% if novel_list %}
+<div class="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4">
+    {% for novel in novel_list %}
+    <div class="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
+        <a href="/novel/{{ novel.name }}" class="block">
+            <div class="aspect-w-1 aspect-h-1.414 overflow-hidden">
+                <img src="{{ novel.cover }}" alt="{{ novel.name }} 封面" class="w-full h-full object-cover transition-transform duration-500 hover:scale-110">
+            </div>
+            <div class="p-2">
+                <h3 class="font-bold text-sm text-dark truncate">{{ novel.name }}</h3>
+                <p class="text-xs text-gray-500 mt-1">{{ novel.chapters|length }} 个章节</p>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="bg-gray-100 rounded-lg p-8 text-center">
+    <i class="fa fa-frown-o text-4xl text-gray-400 mb-4"></i>
+    <h3 class="text-xl font-semibold text-gray-800 mb-2">没有找到小说</h3>
+    <p class="text-gray-600 mb-6">请将小说文件夹放入小说库目录中</p>
+    <a href="/refresh" class="btn-primary">刷新列表</a>
+</div>
+{% endif %}
+{% endblock %}

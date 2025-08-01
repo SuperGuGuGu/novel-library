@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - 漫画库</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <!-- 配置Tailwind自定义主题 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        dark: '#1E293B',
+                        light: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .manga-card {
+                @apply relative overflow-hidden rounded-lg shadow-md transition-all duration-300 hover:shadow-xl;
+            }
+            .manga-card img {
+                @apply w-full h-64 object-cover transition-transform duration-500 hover:scale-110;
+            }
+            .manga-card-overlay {
+                @apply absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-end p-4;
+            }
+            .btn-primary {
+                @apply bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-md transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5;
+            }
+            .btn-secondary {
+                @apply bg-secondary hover:bg-secondary/90 text-white font-medium py-2 px-4 rounded-md transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5;
+            }
+            .nav-link {
+                @apply relative text-dark hover:text-primary transition-colors duration-200;
+            }
+            .nav-link::after {
+                @apply content-[''] absolute w-0 h-0.5 bg-primary bottom-0 left-0 transition-all duration-300;
+            }
+            .nav-link:hover::after {
+                @apply w-full;
+            }
+            .reading-mode {
+                @apply bg-dark text-white;
+            }
+            .header-hidden {
+                @apply transform -translate-y-full;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- 导航栏 -->
+    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-sm shadow-sm transition-transform duration-300">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-book text-primary text-2xl"></i>
+                <h1 class="text-xl font-bold text-dark">小说阅读器</h1>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                    <i class="fa fa-moon-o text-gray-600"></i>
+                </button>
+                <button class="md:hidden p-2 rounded-full hover:bg-gray-100 transition-colors" id="mobile-menu-button">
+                    <i class="fa fa-bars text-gray-600"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- 移动端菜单 -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
+            <div class="container mx-auto px-4 py-3 flex flex-col space-y-3">
+                <a href="/" class="py-2 px-3 rounded-md hover:bg-gray-50 transition-colors">首页</a>
+                <a href="/refresh" class="py-2 px-3 rounded-md hover:bg-gray-50 transition-colors">刷新列表</a>
+            </div>
+        </div>
+    </header>
+    
+    <!-- 主要内容 -->
+    <main class="flex-grow container mx-auto px-4 py-6">
+        {% if message %}
+        <div class="mb-6 p-4 bg-green-100 text-green-800 rounded-lg shadow-sm">
+            <i class="fa fa-check-circle mr-2"></i> {{ message }}
+        </div>
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- JavaScript -->
+    <script>
+        // 移动端菜单切换
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+        
+        // 主题切换
+        document.getElementById('theme-toggle').addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            const body = document.body;
+            
+            if (icon.classList.contains('fa-moon-o')) {
+                icon.classList.remove('fa-moon-o');
+                icon.classList.add('fa-sun-o');
+                body.classList.add('reading-mode');
+            } else {
+                icon.classList.remove('fa-sun-o');
+                icon.classList.add('fa-moon-o');
+                body.classList.remove('reading-mode');
+            }
+        });
+        
+        // 滚动时导航栏效果 - 仅在阅读页面生效
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('header');
+            const isReadingPage = window.location.pathname.includes('/manga/');
+
+            // 只有在阅读页面才应用滚动隐藏效果
+            if (isReadingPage) {
+                // 记录当前滚动位置和方向
+                let lastScrollTop = 0;
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+                if (scrollTop > 100) { // 滚动超过100px才开始隐藏
+                    if (scrollTop > lastScrollTop) {
+                        // 向下滚动 - 隐藏导航栏
+                        header.classList.add('header-hidden');
+                    } else {
+                        // 向上滚动 - 显示导航栏
+                        header.classList.remove('header-hidden');
+                    }
+                } else {
+                    // 滚动距离小 - 显示导航栏
+                    header.classList.remove('header-hidden');
+                }
+
+                lastScrollTop = scrollTop;
+            } else {
+                // 非阅读页面保持原有效果
+                if (scrollTop > 10) {
+                    header.classList.add('shadow-md');
+                } else {
+                    header.classList.remove('shadow-md');
+                }
+            }
+        });
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>
