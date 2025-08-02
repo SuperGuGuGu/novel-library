@@ -572,8 +572,8 @@ async def novel_detail(request: Request, novel_name: str = Path(..., title="ц╝лч
     chapters = {}
     for chapter_id in novel['chapters'].keys():
         chapters[chapter_id] = copy.deepcopy(novel['chapters'][chapter_id])
-        chapters[chapter_id]['reading_state'] = (config['reading_progress'].get(user_id, {}).get(novel_name, {})
-                                                 .get(chapters[chapter_id]['name'], 0.0))
+        chapters[chapter_id]['reading_state'] = (
+            config['reading_progress'].get(user_id, {}).get(novel_name, {}).get(chapter_id, 0.0))
 
     return templates.TemplateResponse("detail.html", {
         "request": request,
