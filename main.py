@@ -3,7 +3,6 @@ import copy
 from collections import defaultdict
 import ebooklib
 import httpx
-import requests
 from fastapi import FastAPI, Request, HTTPException, Path
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
@@ -12,7 +11,7 @@ import json
 from ebooklib import epub
 import os
 import traceback
-import fitz
+# import fitz
 from bs4 import BeautifulSoup
 from bs4.element import Tag as bs4tag
 # from libgen.mobi import MobiFile
@@ -314,7 +313,6 @@ def extract_images_from_pdf(path: str, pdf_name: str):
     logger.debug(f"提取pdf：{path}/{pdf_name}")
     try:
         # 未编写代码
-        mobi = MobiFile()
         # 创建保存图片的目录
         path_name = pdf_name.removesuffix(f".{pdf_name.split('.')[-1]}")
         output_dir = os.path.join(path, path_name)
