@@ -4,24 +4,23 @@ from collections import defaultdict
 import ebooklib
 import httpx
 import requests
-from bs4 import BeautifulSoup
 from fastapi import FastAPI, Request, HTTPException, Path
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 import re
 import json
 from ebooklib import epub
-from nonebot import logger
-import nonebot
 import os
 import traceback
 import fitz
+from bs4 import BeautifulSoup
 from bs4.element import Tag as bs4tag
-
 # from libgen.mobi import MobiFile
+import logging
+logging.basicConfig(level = logging.DEBUG,format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
-nonebot.init(log_level="DEBUG")
 config = {
     "novel_dir_list": [],
     "reading_progress": {}
