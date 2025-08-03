@@ -21,8 +21,10 @@ logger = logging.getLogger(__name__)
 
 
 config = {
-    "novel_dir_list": [],
-    "reading_progress": {}
+    "novel_dir_list": [],  # 小说库文件夹列表
+    "reading_progress": {},  # 阅读进度
+    "last_time_reading": [],  # 上次阅读小说
+    "last_time_reading_len": 1  # 首页上次阅读小说最大可显示数量
 }
 
 
@@ -34,7 +36,9 @@ def load_config():
         with open(config_path, "w", encoding="UTF-8") as file:
             file.write(json.dumps({"novel_dir_list": []}, ensure_ascii=False, indent=4))
     with open(config_path, "r", encoding="utf-8") as file:
-        config = json.loads(file.read())
+        new_config: dict = json.loads(file.read())
+    for k, v in new_config.items():
+        config[k] = v
 
 
 def save_config():
@@ -526,15 +530,31 @@ scan_novel_directory()
 # 漫画列表主页
 @app.get("/", response_class=HTMLResponse)
 async def novel_list(request: Request):
+    user_id = "user_id"
+
     novel_list = []
+    last_time_reading_list = []
     for novel_name in novel_datas.keys():
-        novel_list.append({
-            "name": novel_datas[novel_name]['name'],
-            "cover": f"/images/{novel_name}/{novel_datas[novel_name]['cover']}",
-            "chapters": novel_datas[novel_name]['chapters']
-        })
+        if novel_name in config['last_time_reading']:
+            reading_progress = 0
+            for chapter_id in novel_datas[novel_name]['chapters']:
+                if config['reading_progress'].get(user_id, {}).get(novel_name, {}).get(chapter_id, 0.0) > 99:
+                    reading_progress += 1
+            last_time_reading_list.append({
+                "name": novel_datas[novel_name]['name'],
+                "cover": f"/images/{novel_name}/{novel_datas[novel_name]['cover']}",
+                "chapters": novel_datas[novel_name]['chapters'],
+                "reading_progress": reading_progress
+            })
+        else:
+            novel_list.append({
+                "name": novel_datas[novel_name]['name'],
+                "cover": f"/images/{novel_name}/{novel_datas[novel_name]['cover']}",
+                "chapters": novel_datas[novel_name]['chapters']
+            })
     return templates.TemplateResponse("index.html", {
         "request": request,
+        "last_time_reading_list": last_time_reading_list,
         "novel_list": novel_list,
         "title": "小说列表"
     })
@@ -561,7 +581,7 @@ async def refresh_novel(request: Request):
 # 漫画详情页
 @app.get("/novel/{novel_name}", response_class=HTMLResponse)
 async def novel_detail(request: Request, novel_name: str = Path(..., title="漫画名称")):
-    user_id = "user"
+    user_id = "user_id"
 
     novel = novel_datas.get(novel_name)
     if not novel:
@@ -590,7 +610,7 @@ async def novel_read(
         request: Request,
         novel_name: str = Path(..., title="漫画名称"),
         chapter_name: str = Path(..., title="章节名称")):
-    user_id = "user"
+    user_id = "user_id"
 
     novel = novel_datas.get(novel_name)
     if not novel:
@@ -614,6 +634,12 @@ async def novel_read(
         next_id = chapter_list[current_index + 1]
         next_chapter = {"id": next_id, "name": novel["chapters"][next_id]['name']}
 
+    # 添加上次阅读小说记录
+    if novel_name not in config['last_time_reading']:
+        config['last_time_reading'].append(novel_name)
+        config['last_time_reading'] = config['last_time_reading'][:config['last_time_reading_len']]
+        save_config()
+
     return templates.TemplateResponse("novel_reader.html", {
         "request": request,
         "novel_name": novel_name,
@@ -627,7 +653,7 @@ async def novel_read(
 # 保存阅读进度
 @app.post("/api/state")
 async def get_novel(novel_name: str, chapter_name: str, state: float):
-    user_id = "user"
+    user_id = "user_id"
 
     if user_id not in config['reading_progress'].keys():
         config['reading_progress'][user_id] = {}
@@ -646,7 +672,7 @@ async def get_novel(novel_name: str, chapter_name: str, state: float):
 # 获取阅读进度
 @app.get("/api/state")
 async def get_novel(novel_name: str, chapter_name: str, state: float = 0.0):
-    user_id = "user"
+    user_id = "user_id"
 
     if user_id not in config['reading_progress'].keys():
         config['reading_progress'][user_id] = {}

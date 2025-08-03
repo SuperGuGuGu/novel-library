@@ -9,6 +9,29 @@
     <a href="/refresh" class="btn-secondary self-start sm:self-center">刷新列表</a>
 </div>
 
+{% if last_time_reading_list %}
+<p class="text-gray-600">上次阅读</p>
+<div class="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4">
+    {% for novel in last_time_reading_list %}
+    <div class="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
+        <a href="/novel/{{ novel.name }}" class="block">
+            <div class="aspect-w-1 aspect-h-1.414 overflow-hidden">
+                <img src="{{ novel.cover }}" alt="{{ novel.name }} 封面"
+                     class="w-full h-full object-cover transition-transform duration-500 hover:scale-110">
+            </div>
+            <div class="p-2">
+                <h3 class="font-bold text-sm text-dark truncate">{{ novel.name }}</h3>
+                <p class="text-xs text-gray-500 mt-1">{{ novel.chapters|length }} 个章节</p>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+<br>
+<hr>
+<br>
+{% endif %}
+
 {% if novel_list %}
 <div class="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4">
     {% for novel in novel_list %}
