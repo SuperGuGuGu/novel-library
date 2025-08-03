@@ -5,6 +5,12 @@
     <a href="/" class="btn-secondary">
         <i class="fa fa-arrow-left mr-2"></i>首页
     </a>
+
+    {% if continue_reading %}
+    <a href="/novel/{{ novel.name }}/{{ continue_reading.id }}" class="btn-secondary ml-4">
+        继续阅读{{ continue_reading.name }}<i class="fa fa-arrow-right ml-2"></i>
+    </a>
+    {% endif %}
 </div>
 
 <div class="flex flex-col md:flex-row gap-8">
@@ -15,20 +21,20 @@
                  class="w-full h-auto object-cover transition-transform duration-500 hover:scale-105">
         </div>
     </div>
-    
+
     <!-- 小说信息 -->
     <div class="md:w-3/4">
         <h2 class="text-2xl md:text-3xl font-bold text-dark mb-4">{{ novel.name }}</h2>
-        
+
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
             <div class="flex items-center mb-4">
                 <span class="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
                     {{ novel.chapters|length }} 个章节
                 </span>
             </div>
-            
+
             <h3 class="text-lg font-semibold text-dark mb-3">章节列表</h3>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {% for chapter_id, chapter in novel.chapters.items() %}
                 <a href="/novel/{{ novel.name }}/{{ chapter_id }}"

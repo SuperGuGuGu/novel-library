@@ -593,6 +593,15 @@ async def novel_detail(request: Request, novel_name: str = Path(..., title="漫�
         chapters[chapter_id]['reading_state'] = (
             config['reading_progress'].get(user_id, {}).get(novel_name, {}).get(chapter_id, 0.0))
 
+    # 继续阅读按钮
+    continue_reading = None
+    for chapter_id in chapters:
+        if config['reading_progress'].get(user_id, {}).get(novel_name, {}).get(chapter_id, 0.0) < 99:
+            continue_reading = {
+                "id": chapter_id,
+                "name": novel_datas.get(novel_name, {}).get('chapters', {}).get(chapter_id, {}).get("name")
+            }
+            break
     return templates.TemplateResponse("detail.html", {
         "request": request,
         "novel": {
@@ -600,6 +609,7 @@ async def novel_detail(request: Request, novel_name: str = Path(..., title="漫�
             "cover": f"/images/{novel_name}/{novel['cover']}",
             "chapters": chapters
         },
+        "continue_reading": continue_reading,
         "title": novel["name"]  # 小说详情页标题
     })
 
