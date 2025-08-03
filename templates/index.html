@@ -4,7 +4,7 @@
 <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div>
         <h2 class="text-2xl md:text-3xl font-bold text-dark mb-2">首页</h2>
-        <p class="text-gray-600">共 {{ novel_list|length }} 部漫画</p>
+        <p class="text-gray-600">共 {{ novel_list|length }} 部小说</p>
     </div>
     <a href="/refresh" class="btn-secondary self-start sm:self-center">刷新列表</a>
 </div>
@@ -15,7 +15,8 @@
     <div class="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
         <a href="/novel/{{ novel.name }}" class="block">
             <div class="aspect-w-1 aspect-h-1.414 overflow-hidden">
-                <img src="{{ novel.cover }}" alt="{{ novel.name }} 封面" class="w-full h-full object-cover transition-transform duration-500 hover:scale-110">
+                <img src="{{ novel.cover }}" alt="{{ novel.name }} 封面"
+                     class="w-full h-full object-cover transition-transform duration-500 hover:scale-110">
             </div>
             <div class="p-2">
                 <h3 class="font-bold text-sm text-dark truncate">{{ novel.name }}</h3>
@@ -33,4 +34,5 @@
     <a href="/refresh" class="btn-primary">刷新列表</a>
 </div>
 {% endif %}
+
 {% endblock %}
